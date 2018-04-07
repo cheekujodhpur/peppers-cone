@@ -3,6 +3,10 @@
   <head>
     <title>Hacking WebGL</title>
     <meta charset="utf-8" lang="en-IN" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <script type="x-shader/x-vertex" id="vertex-shader">
     precision mediump float;
  
@@ -53,20 +57,39 @@
       crossorigin="anonymous">
     </script>
     <script type="text/javascript" src="./toji-gl-matrix-a24a711/dist/gl-matrix.js"></script>
+    <script type="text/javascript" src="webvr-polyfill.min.js"></script>
+    <script type="text/javascript" src="three.js"></script>
     <script type="text/javascript">
+    var polyfill = new WebVRPolyfill();
+    var frameData = new VRFrameData();
+    var vrDisplay;
+    var initRot = new THREE.Quaternion();
+    var pastDiffZ = 0;
+    var currDiffZ = 0;
  
     function render(gl,scene,timestamp,previousTimestamp) {
- 
+        
+      vrDisplay.getFrameData(frameData);
+
+      var newRot = new THREE.Quaternion();
+      newRot.fromArray(getPose(frameData));
+      var initRotInv = initRot.inverse();
+      var diffRot = newRot.multiply(initRot.inverse());
+      var diffAngle = new THREE.Euler();
+      diffAngle.setFromQuaternion(diffRot);
+      pastDiffZ = currDiffZ;
+      currDiffZ = diffAngle.z;
+
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.useProgram(scene.program);
  
-      var delta = (0.125 * Math.PI) / (timestamp - previousTimestamp);
+      var delta = (currDiffZ-pastDiffZ);
  
       var light = vec3.fromValues(0, 0, 0);
  
       gl.uniform3fv(scene.program.directionalLightUniform, light);
  
-      var rotateX = 0;
+      var rotateX = 1;
       var rotateY = 0;
       var rotateZ = 0;
  
@@ -301,8 +324,23 @@
       });
     }
  
+    //returns quaternion pose
+    function getPose(frameData) {
+      return frameData.pose['orientation'];
+    }
+
     $(document).ready(function() {
       loadMesh('teapot.obj')
+
+      navigator.getVRDisplays().then(function(displays) {
+          vrDisplay = displays[0];
+
+          vrDisplay.getFrameData(frameData);
+          initRot.fromArray(getPose(frameData));
+
+          console.log('Display found');
+      });
+
     });
  
     </script>
@@ -310,4 +348,5 @@
   </head>
   <body>
     <canvas id="rendering-surface"></canvas>
+    <div id="info"></div>
   </body>
