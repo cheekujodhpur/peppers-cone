@@ -2,6 +2,11 @@
 <html>
   <head>
     <title>Hacking WebGL</title>
+    <meta charset="utf-8" lang="en-IN" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <script type="x-shader/x-vertex" id="vertex-shader">
     precision mediump float;
  
@@ -52,25 +57,41 @@
       crossorigin="anonymous">
     </script>
     <script type="text/javascript" src="./toji-gl-matrix-a24a711/dist/gl-matrix.js"></script>
+    <script type="text/javascript" src="webvr-polyfill.min.js"></script>
+    <script type="text/javascript" src="three.js"></script>
     <script type="text/javascript">
+    var polyfill = new WebVRPolyfill();
+    var frameData = new VRFrameData();
+    var vrDisplay;
+    var initRot = new THREE.Quaternion();
+    var pastDiffZ = 0;
+    var currDiffZ = 0;
  
     function render(gl,scene,timestamp,previousTimestamp) {
- 
+        
+      vrDisplay.getFrameData(frameData);
+
+      var newRot = new THREE.Quaternion();
+      newRot.fromArray(getPose(frameData));
+      var initRotInv = initRot.inverse();
+      var diffRot = newRot.multiply(initRot.inverse());
+      var diffAngle = new THREE.Euler();
+      diffAngle.setFromQuaternion(diffRot);
+      pastDiffZ = currDiffZ;
+      currDiffZ = diffAngle.z;
+
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.useProgram(scene.program);
  
-      var delta = (0.125 * Math.PI) / (timestamp - previousTimestamp);
+      var delta = (currDiffZ-pastDiffZ);
  
-      var light = vec3.fromValues(
-        ($('#light-x').val() - 50.0) / 10.0,
-        ($('#light-y').val() - 50.0) / 10.0,
-        ($('#light-z').val() - 50.0) / 10.0);
+      var light = vec3.fromValues(0, 0, 0);
  
       gl.uniform3fv(scene.program.directionalLightUniform, light);
  
-      var rotateX = ($('#rotate-x').val() - 5) / 10;
-      var rotateY = ($('#rotate-y').val() - 5) / 10;
-      var rotateZ = ($('#rotate-z').val() - 5) / 10;
+      var rotateX = 1;
+      var rotateY = 0;
+      var rotateZ = 0;
  
       mat4.rotate(
         scene.object.modelMatrix, scene.object.modelMatrix, delta,
@@ -303,24 +324,29 @@
       });
     }
  
+    //returns quaternion pose
+    function getPose(frameData) {
+      return frameData.pose['orientation'];
+    }
+
     $(document).ready(function() {
       loadMesh('teapot.obj')
+
+      navigator.getVRDisplays().then(function(displays) {
+          vrDisplay = displays[0];
+
+          vrDisplay.getFrameData(frameData);
+          initRot.fromArray(getPose(frameData));
+
+          console.log('Display found');
+      });
+
     });
  
     </script>
+    <link rel="stylesheet" href="main.css"></link>
   </head>
   <body>
-    <canvas id="rendering-surface" height="500" width="500"></canvas>
-    <form>
-      <div>
-        <label for="light-x">Light X<input type="range" name="light-x" id="light-x" min="0" max="100"></label>
-        <label for="light-y">Light Y<input type="range" name="light-y" id="light-y" min="0" max="100"></label>
-        <label for="light-z">Light Z<input type="range" name="light-z" id="light-z" min="0" max="100"></label>
-      </div>
-      <div>
-        <label for="rotate-x">Rotate X<input type="range" name="rotate-x" id="rotate-x" min="0" max="10" value="5"></label>
-        <label for="rotate-y">Rotate Y<input type="range" name="rotate-y" id="rotate-y" min="0" max="10" value="5"></label>
-        <label for="rotate-z">Rotate Z<input type="range" name="rotate-z" id="rotate-z" min="0" max="10" value="5"></label>
-      </div>
-    </form>
+    <canvas id="rendering-surface"></canvas>
+    <div id="info"></div>
   </body>
