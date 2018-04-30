@@ -89,8 +89,8 @@
  
       gl.uniform3fv(scene.program.directionalLightUniform, light);
  
-      var rotateX = 1;
-      var rotateY = 0;
+      var rotateX = 0;
+      var rotateY = 1;
       var rotateZ = 0;
  
       mat4.rotate(
@@ -257,7 +257,7 @@
         render(gl, scene, timestamp, 0);
       });
     }
- 
+    var counter = 0;
     function loadMeshData(string) {
       var lines = string.split("\n");
       var positions = [];
@@ -274,6 +274,7 @@
                 parseFloat(parts[2]),
                 parseFloat(parts[3])
               ));
+            counter = counter + 1;
               break;
             case 'vn':
               normals.push(
@@ -303,7 +304,7 @@
           }
         }
       }
-      console.log(
+      alert(
         "Loaded mesh with " + (vertices.length / 6) + " vertices");
       return {
         primitiveType: 'TRIANGLES',
