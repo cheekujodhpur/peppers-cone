@@ -28,6 +28,8 @@ int main( int argc, char** argv )
         cout << "Video not opened" << endl;
         return -1;
     }
+    //namedWindow("Display", WINDOW_NORMAL);
+    //setWindowProperty("Display", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
     namedWindow("Display");
 
     Mat frame_gray;
@@ -39,7 +41,7 @@ int main( int argc, char** argv )
     width = frame.cols;
     height = frame.rows;
     vector<int> data[width*height];
-
+    
     do {
 
         count = count+1;
@@ -51,7 +53,7 @@ int main( int argc, char** argv )
             for (int j = 0; j < frame_gray.cols; ++j)
                 data[i*frame_gray.cols + j].push_back(frame_gray.at<uchar>(i,j));
 
-        int key = waitKey(1);
+        int key = waitKey(500);
 
         // quit on q
         if ( (key & 0xFF) == 'q' )
