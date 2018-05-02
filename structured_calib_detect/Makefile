@@ -5,4 +5,4 @@ create:
 	g++ --std=c++11 create_map.cpp -o create_map -lopencv_structured_light -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio
 
 match:
-	g++ --std=c++11 -O3 match_map.cpp -o match_map
+	g++ --std=c++11 -O3 -fopenmp match_map.cpp -o match_map
