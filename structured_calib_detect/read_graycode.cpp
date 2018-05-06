@@ -20,6 +20,10 @@ int main( int argc, char** argv )
         cout << "Please enter file name" << endl;
         return -1;
     }
+    if ( argc < 4 ) {
+        cout << "Please enter threshold" << endl;
+        return -1;
+    }
 
     vc.open(argv[1]);
     if ( !vc.isOpened() ) {
@@ -30,6 +34,7 @@ int main( int argc, char** argv )
     namedWindow("Display Proc", WINDOW_NORMAL);
 
     Mat frame_flipped, frame_gray, thresh;
+    Mat frame_proc, frame_hsv;
     Mat cropped_frame;
     Mat prev_thresh;
 
@@ -49,15 +54,16 @@ int main( int argc, char** argv )
     int height = frame.rows;
     cout << width << " x " << height << endl;
 
-    int thresh_bar = 100;
+    int thresh_bar = atoi(argv[2]);
     // To set thresh values
-    cropped_frame = Mat(frame, ROI);
+    //cropped_frame = Mat(frame, ROI);
     //flip(cropped_frame, frame_flipped, 0);
-    cvtColor(cropped_frame, frame_gray, COLOR_RGB2GRAY); 
-    threshold(frame_gray, thresh, thresh_bar, 255, THRESH_BINARY);
+    //cvtColor(cropped_frame, frame_gray, COLOR_RGB2GRAY); 
+    //threshold(frame_gray, thresh, thresh_bar, 255, THRESH_BINARY);
+    //inRange(cropped_frame, Scalar(127,0,127), Scalar(255,0,255), frame_proc);
 
     cout << "Reading all frames..." << endl;
-
+    
     int select_count = 0;
     do {
 
@@ -65,18 +71,19 @@ int main( int argc, char** argv )
         imshow("Display Raw", cropped_frame);
 
         //flip(cropped_frame, frame_flipped, 0);
-        cvtColor(cropped_frame, frame_gray, COLOR_RGB2GRAY); 
+        //cvtColor(cropped_frame, frame_gray, COLOR_RGB2GRAY); 
+        //threshold(frame_gray, thresh, thresh_bar, 255, THRESH_BINARY);
+        cvtColor(cropped_frame, frame_hsv, COLOR_RGB2HSV);
+        inRange(frame_hsv, Scalar(thresh_bar,0,0), 
+                Scalar(179,255,255), frame_proc);
 
-        prev_thresh = thresh.clone();
-        threshold(frame_gray, thresh, thresh_bar, 255, THRESH_BINARY);
-
-        imshow("Display Proc", thresh);
+        imshow("Display Proc", frame_proc);
 
         cout << "Keep this frame [y/n] " << flush;
         int key = waitKey(0);
         if (key == 'y') {
             select_count++;
-            keyframes.push_back(thresh.clone());
+            keyframes.push_back(frame_proc.clone());
             cout << select_count << " selected" << endl;
         }  
         cout << endl;

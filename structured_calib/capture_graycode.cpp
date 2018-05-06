@@ -38,13 +38,20 @@ int main( int argc, char** argv )
 
     // namedWindow( "Pattern Window", WINDOW_NORMAL );
     int i = 0;
+    Mat tmp_w;
+    Mat tmp_i;
     while( i < (int) pattern.size() )
     {
         /// Display code commented out
         // imshow( "Pattern Window", pattern[i] );
         char fname[80];
-        sprintf(fname, "image_%d.BMP", i);
-        imwrite(fname, pattern[i]);
+        sprintf(fname, "graycode_%d.BMP", i);
+        
+        cvtColor(pattern[i], tmp_w, COLOR_GRAY2RGB);
+        tmp_w.setTo(Scalar(255,0,255), pattern[i]);
+        bitwise_not(pattern[i], tmp_i);
+        tmp_w.setTo(Scalar(0,255,0), tmp_i); 
+        imwrite(fname, tmp_w);
         // int key = waitKey( 0 );
         // if ( key ==  13 ) {
         i = i + 1;
